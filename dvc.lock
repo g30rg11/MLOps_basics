@@ -1,0 +1,38 @@
+schema: '2.0'
+stages:
+  calculate:
+    cmd: uv run python calculate.py
+    deps:
+    - path: calculate.py
+      hash: md5
+      md5: e9ff0360e7193f793f7bb9b2dfda3506
+      size: 785
+    - path: data/substances.csv
+      hash: md5
+      md5: ef22cfa04f112986a4fabfefb1a25720
+      size: 106
+    - path: main.py
+      hash: md5
+      md5: 5350950de821b89544a52396b7802c1d
+      size: 627
+    outs:
+    - path: data/results.csv
+      hash: md5
+      md5: 6901abbab47a2b116b3dc7fe615d07b6
+      size: 67
+  summarize:
+    cmd: uv run python summarize.py
+    deps:
+    - path: data/results.csv
+      hash: md5
+      md5: 6901abbab47a2b116b3dc7fe615d07b6
+      size: 67
+    - path: summarize.py
+      hash: md5
+      md5: 79c7cb1e9fb88c2f688ba5369e742a50
+      size: 664
+    outs:
+    - path: reports/summary.json
+      hash: md5
+      md5: cd657a8092a4459b7c972fb0079e0860
+      size: 56

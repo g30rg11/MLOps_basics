@@ -1,0 +1,16 @@
+stages:
+  calculate:
+    cmd: uv run python calculate.py
+    deps:
+    - calculate.py
+    - data/substances.csv
+    - main.py
+    outs:
+    - data/results.csv
+  summarize:
+    cmd: uv run python summarize.py
+    deps:
+    - data/results.csv
+    - summarize.py
+    outs:
+    - reports/summary.json
