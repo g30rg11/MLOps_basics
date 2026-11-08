@@ -70,3 +70,58 @@ def test_training_and_evaluation_pipeline() -> None:
 
     for before, after in zip(before_evaluation, model.parameters(), strict=True):
         torch.testing.assert_close(before, after.detach(), rtol=0, atol=0)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("max_batches", [0, -1])
+def test_training_rejects_invalid_batch_limit(max_batches: int) -> None:
+    data = prepare_wine()
+    loader = make_loader(data.x_train, data.y_train)
+    model = WineClassifier()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+    with pytest.raises(ValueError, match="max_batches must be positive"):
+        train_epoch(model, loader, optimizer, max_batches=max_batches)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("operation", ["train", "evaluate"])
+def test_empty_loader_is_rejected(operation: str) -> None:
+    dataset = torch.utils.data.TensorDataset(
+        torch.empty(0, 13),
+        torch.empty(0, dtype=torch.int64),
+    )
+    loader = torch.utils.data.DataLoader(dataset, batch_size=4)
+    model = WineClassifier()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+    with pytest.raises(ValueError, match="loader must not be empty"):
+        if operation == "train":
+            train_epoch(model, loader, optimizer)
+        else:
+            evaluate(model, loader)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("operation", ["train", "evaluate"])
+def test_nonfinite_loss_is_rejected(operation: str) -> None:
+    dataset = torch.utils.data.TensorDataset(
+        torch.full((4, 13), float("nan")),
+        torch.zeros(4, dtype=torch.int64),
+    )
+    loader = torch.utils.data.DataLoader(dataset, batch_size=4)
+    model = WineClassifier()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    before = [parameter.detach().clone() for parameter in model.parameters()]
+    model.train()
+
+    with pytest.raises(ValueError, match="loss must be finite"):
+        if operation == "train":
+            train_epoch(model, loader, optimizer)
+        else:
+            evaluate(model, loader)
+
+    for old, new in zip(before, model.parameters(), strict=True):
+        torch.testing.assert_close(old, new.detach(), rtol=0, atol=0)
+
+    assert model.training

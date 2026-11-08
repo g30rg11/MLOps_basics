@@ -62,3 +62,48 @@ def test_loader_batches_and_types() -> None:
 
     torch.testing.assert_close(all_features, data.x_train)
     torch.testing.assert_close(all_labels, data.y_train)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("test_size", [0.0, 1.0, -0.2, 1.2])
+def test_invalid_split_size(test_size: float) -> None:
+    with pytest.raises(ValueError, match="test_size"):
+        prepare_wine(test_size=test_size)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("wrong_features_shape", "features must have shape"),
+        ("mismatched_labels", "labels must have shape"),
+        ("empty_dataset", "Dataset must not be empty"),
+        ("invalid_batch_size", "batch_size must be positive"),
+        ("nonfinite_features", "features must contain only finite"),
+        ("wrong_labels_dtype", "labels must have dtype"),
+        ("invalid_label", "labels must be class indices"),
+    ],
+)
+def test_loader_rejects_invalid_data(case: str, message: str) -> None:
+    features = torch.zeros(4, 13, dtype=torch.float32)
+    labels = torch.zeros(4, dtype=torch.int64)
+    batch_size = 2
+
+    if case == "wrong_features_shape":
+        features = torch.zeros(4, 12)
+    elif case == "mismatched_labels":
+        labels = torch.zeros(3, dtype=torch.int64)
+    elif case == "empty_dataset":
+        features = torch.empty(0, 13)
+        labels = torch.empty(0, dtype=torch.int64)
+    elif case == "invalid_batch_size":
+        batch_size = 0
+    elif case == "nonfinite_features":
+        features[0, 0] = float("nan")
+    elif case == "wrong_labels_dtype":
+        labels = labels.float()
+    elif case == "invalid_label":
+        labels[0] = 3
+
+    with pytest.raises(ValueError, match=message):
+        make_loader(features, labels, batch_size=batch_size)
