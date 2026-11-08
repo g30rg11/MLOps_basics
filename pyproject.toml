@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "scikit-learn>=1.9.1",
+    "torch>=2.15.0",
+]
 
 [project.scripts]
 mlops-homework = "mlops_homework:main"
@@ -16,6 +19,9 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "dvc>=3.67.1",
+    "hypothesis>=6.170.15",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.1",
     "ty>=0.0.89",
 ]
