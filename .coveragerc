@@ -1,0 +1,6 @@
+[run]
+source = mlops_homework
+patch = subprocess
+
+[report]
+show_missing = true
